@@ -1,5 +1,15 @@
 import re
 from urllib.parse import urlparse
+import nltk
+from nltk.corpus import stopwords
+
+# download the stopwords
+try:
+    nltk.data.find('corpora/stopwords')
+except LookupError:
+    nltk.download('stopwords')
+STOP_WORDS = set(stopwords.words('english'))
+
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
