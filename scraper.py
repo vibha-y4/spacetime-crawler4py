@@ -15,6 +15,11 @@ def extract_next_links(url, resp):
     #         resp.raw_response.url: the url, again
     #         resp.raw_response.content: the content of the page!
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
+
+    #use beautifulsoup to scrape information and parse
+
+    #store
+
     return list()
 
 def is_valid(url):
@@ -22,6 +27,8 @@ def is_valid(url):
     # If you decide to crawl it, return True; otherwise return False.
     # There are already some conditions that return False.
     try:
+        #check for calendar pages which are traps
+        #store number of unique pages, longest page, 50 most common terms, subdomains each in a file so information is accessible after program terminates
         parsed = urlparse(url)
         if parsed.scheme not in set(["http", "https"]):
             return False
