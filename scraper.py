@@ -26,6 +26,15 @@ WORD_COUNTS_FILE = 'word_counts.txt'
 COMMON_WORDS_FILE = 'common_words.txt'
 SUBDOMAINS_FILE = 'subdomains.txt'
 
+# allowed domains and paths
+ALLOWED_DOMAINS = {
+    'ics.uci.edu',
+    'cs.uci.edu',
+    'informatics.uci.edu',
+    'stat.uci.edu',
+    'today.uci.edu'
+}
+ALLOWED_PATH_PREFIX = '/department/information_computer_sciences'
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
@@ -60,6 +69,23 @@ def is_valid(url):
         path = parsed.path.lower()
         if parsed.scheme not in set(["http", "https"]):
             return False
+
+        # check if it is an allowed domain
+        in_allowed_domain = False
+        for allowed_domain in ALLOWED_DOMAINS:
+            if domain == allowed_domain or domain.endswith(f'.{allowed_domain}'):
+                in_allowed_domain = True
+                break
+        if not in_allowed_domain:
+            return False
+
+        if domain == 'today.uci.edu' and not path.startswith(ALLOWED_PATH_PREFIX):
+            return False
+
+        # avoids traps posed by calendars
+        if re.search(r'(calendar|event|\d{4}-\d{2}-\d{2})', path):
+            return False
+
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
             + r"|png|tiff?|mid|mp2|mp3|mp4"
