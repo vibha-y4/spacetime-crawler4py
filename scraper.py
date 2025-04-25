@@ -1,7 +1,22 @@
 import re
 from urllib.parse import urlparse
+from bs4 import BeautifulSoup
+import utils
 
 
+def fix_URL(url : str, href : str):
+    result = None
+    if href.startswith('#') or href.startswith('tel') or href.startswith('mailto'):
+        result =  None
+    elif href.startswith('//'):
+        result = 'https:' + href
+        print(result)
+    elif href.startswith('/'):
+        root = re.match(r'^(https?://[^/]+)', url)
+        result = f'{root.group(1)}{href}'
+    return result
+    
+    
 # load the stopwords
 def load_stopwords(file_path='stopwords.txt'):
     try:
@@ -31,10 +46,23 @@ def extract_next_links(url, resp):
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
 
     #use beautifulsoup to scrape information and parse
-
+    if resp.error:
+        return list()
+    else:
+        page_content = resp.raw_response.content
+        soup = BeautifulSoup(page_content, 'html.parser')
+        link_content = soup.find_all('a')
+        links = set()
+        for link in link_content:
+            if link.has_attr('href'):
+                href = link['href']
+                link = fix_URL(url, href)
+                if link is not None:
+                    #print(link)
+                    links.add(link)
     #store
 
-    return list()
+    return list(links)
 
 def is_valid(url):
     # Decide whether to crawl this url or not. 
