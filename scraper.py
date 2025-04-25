@@ -1,5 +1,11 @@
 import re
 from urllib.parse import urlparse
+import bs4
+from bs4 import BeautifulSoup
+from collections import Counter
+import os
+import string
+
 
 
 # load the stopwords
@@ -13,6 +19,12 @@ def load_stopwords(file_path='stopwords.txt'):
 
 
 STOP_WORDS = load_stopwords()
+
+# files to store data for report
+UNIQUE_PAGES_FILE = 'unique_pages.txt'
+WORD_COUNTS_FILE = 'word_counts.txt'
+COMMON_WORDS_FILE = 'common_words.txt'
+SUBDOMAINS_FILE = 'subdomains.txt'
 
 
 def scraper(url, resp):
@@ -44,6 +56,8 @@ def is_valid(url):
         #check for calendar pages which are traps
         #store number of unique pages, longest page, 50 most common terms, subdomains each in a file so information is accessible after program terminates
         parsed = urlparse(url)
+        domain = parsed.netloc.lower()
+        path = parsed.path.lower()
         if parsed.scheme not in set(["http", "https"]):
             return False
         return not re.match(
