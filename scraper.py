@@ -7,7 +7,6 @@ import os
 import string
 
 
-
 # load the stopwords
 def load_stopwords(file_path='stopwords.txt'):
     try:
@@ -25,6 +24,12 @@ UNIQUE_PAGES_FILE = 'unique_pages.txt'
 WORD_COUNTS_FILE = 'word_counts.txt'
 COMMON_WORDS_FILE = 'common_words.txt'
 SUBDOMAINS_FILE = 'subdomains.txt'
+
+# variables to collect data for report
+unique_pages = set()
+word_frequencies = Counter()
+subdomain_pages = {}
+longest_page = {'url': '', 'word_count': 0}
 
 # allowed domains and paths
 ALLOWED_DOMAINS = {
@@ -62,12 +67,10 @@ def is_valid(url):
     # If you decide to crawl it, return True; otherwise return False.
     # There are already some conditions that return False.
     try:
-        #check for calendar pages which are traps
-        #store number of unique pages, longest page, 50 most common terms, subdomains each in a file so information is accessible after program terminates
         parsed = urlparse(url)
-        domain = parsed.netloc.lower()
-        path = parsed.path.lower()
-        if parsed.scheme not in set(["http", "https"]):
+        domain = parsed.netloc.lower() # extracts the domain
+        path = parsed.path.lower() # extracts the path
+        if parsed.scheme not in {"http", "https"}:
             return False
 
         # check if it is an allowed domain
@@ -86,7 +89,10 @@ def is_valid(url):
         if re.search(r'(calendar|event|\d{4}-\d{2}-\d{2})', path):
             return False
 
-        return not re.match(
+        if 'download' in path or 'attachment' in path:
+            return False
+
+        if re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
             + r"|png|tiff?|mid|mp2|mp3|mp4"
             + r"|wav|avi|mov|mpeg|ram|m4v|mkv|ogg|ogv|pdf"
@@ -94,7 +100,10 @@ def is_valid(url):
             + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
             + r"|epub|dll|cnf|tgz|sha1"
             + r"|thmx|mso|arff|rtf|jar|csv"
-            + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())
+            + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower()):
+            return False
+
+        return True
 
     except TypeError:
         print ("TypeError for ", parsed)
