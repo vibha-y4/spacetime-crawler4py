@@ -56,9 +56,19 @@ def extract_next_links(url, resp):
     #         resp.raw_response.content: the content of the page!
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
 
-    #use beautifulsoup to scrape information and parse
+    #TODO: use beautifulsoup to scrape information and parse
 
-    #store
+    #TODO: extract subdomain
+
+    #TODO: exctract text
+
+    #TODO: exclude stop words when counting words
+
+    #TODO: pdate longest page if needed
+
+    #TODO: extract hyperlinks
+
+    #TODO: call method to save to reports save_data()
 
     return list()
 
@@ -67,6 +77,7 @@ def is_valid(url):
     # If you decide to crawl it, return True; otherwise return False.
     # There are already some conditions that return False.
     try:
+        #TODO: Check for other criteria for infinite traps and pages with no info
         parsed = urlparse(url)
         domain = parsed.netloc.lower() # extracts the domain
         path = parsed.path.lower() # extracts the path
@@ -105,6 +116,28 @@ def is_valid(url):
 
         return True
 
+    #don't know if this needs to be fixed
     except TypeError:
-        print ("TypeError for ", parsed)
+        print("TypeError for ", parsed)
         raise
+
+
+def save_data():
+    with open(UNIQUE_PAGES_FILE, 'w') as f:
+        f.write(f"Total unique pages: {len(unique_pages)}\n")
+        for page in sorted(unique_pages):
+            f.write(f"{page}\n")
+
+    with open(WORD_COUNTS_FILE, 'w') as f:
+        f.write(f"Longest page: {longest_page['url']}\n")
+        f.write(f"Word count: {longest_page['word_count']}\n")
+
+    with open(COMMON_WORDS_FILE, 'w') as f:
+        f.write("50 most common words:\n")
+        for word, count in word_frequencies.most_common(50):
+            f.write(f"{word}: {count}\n")
+
+    with open(SUBDOMAINS_FILE, 'w') as f:
+        f.write("Subdomains and page counts:\n")
+        for subdomain in sorted(subdomain_pages.keys()):
+            f.write(f"{subdomain}, {len(subdomain_pages[subdomain])}\n")
