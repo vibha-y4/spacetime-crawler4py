@@ -1,14 +1,18 @@
 import re
 from urllib.parse import urlparse
-import nltk
-from nltk.corpus import stopwords
 
-# download the stopwords
-try:
-    nltk.data.find('corpora/stopwords')
-except LookupError:
-    nltk.download('stopwords')
-STOP_WORDS = set(stopwords.words('english'))
+
+# load the stopwords
+def load_stopwords(file_path='stopwords.txt'):
+    try:
+        with open(file_path, 'r') as f:
+            return set(line.strip().lower() for line in f if line.strip())
+    except FileNotFoundError:
+        print(f"Error: {file_path} not found. Using empty stopwords set.")
+        return set()
+
+
+STOP_WORDS = load_stopwords()
 
 
 def scraper(url, resp):
