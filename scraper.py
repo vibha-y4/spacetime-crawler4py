@@ -56,21 +56,29 @@ def extract_next_links(url, resp):
     #         resp.raw_response.content: the content of the page!
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
 
-    #TODO: use beautifulsoup to scrape information and parse
+    if resp.status != 200 or not resp.raw_response or not resp.raw_response.content:
+        return []
 
-    #TODO: extract subdomain
+    try:
+        # use beautifulsoup to parse page
+        soup = BeautifulSoup(resp.raw_response.content, 'lxml')
 
-    #TODO: exctract text
 
-    #TODO: exclude stop words when counting words
+        #TODO: extract subdomain and update the subdomain_pages
 
-    #TODO: pdate longest page if needed
+        #TODO: exctract text
 
-    #TODO: extract hyperlinks
+        #TODO: exclude stop words when counting words
 
-    #TODO: call method to save to reports save_data()
+        #TODO: pdate longest page if needed
 
-    return list()
+        #TODO: extract hyperlinks
+
+        #TODO: call method to save to reports save_data()
+
+    except Exception as e:
+        print(f"Error {url}: {e}")
+        return []
 
 def is_valid(url):
     # Decide whether to crawl this url or not. 
@@ -116,7 +124,7 @@ def is_valid(url):
 
         return True
 
-    #don't know if this needs to be fixed
+    #TODO: don't know if this needs to be fixed
     except TypeError:
         print("TypeError for ", parsed)
         raise
