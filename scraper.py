@@ -67,6 +67,7 @@ def extract_next_links(url, resp):
         #TODO: extract subdomain and update the subdomain_pages
 
         #TODO: exctract text
+        #test
 
         #TODO: exclude stop words when counting words
 
