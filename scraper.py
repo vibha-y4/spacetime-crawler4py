@@ -3,6 +3,7 @@ from urllib.parse import urlparse
 import bs4
 from bs4 import BeautifulSoup
 from collections import Counter
+import sys
 import os
 import string
 
@@ -18,6 +19,42 @@ def load_stopwords(file_path='stopwords.txt'):
 
 
 STOP_WORDS = load_stopwords()
+
+
+# goes through every char of the token
+# replaces non alphanumeric characters with whitespace
+def remove_invalid_chars(token):
+    valid_chars = [str(x) for x in range(0, 10)] + [x for x in range(97, 123)] + [x for x in range(65, 91)]
+    fixed_token = ""
+    for char in token:
+        if ord(char) in valid_chars:
+            fixed_token += char
+        else:
+            fixed_token += " "
+    return fixed_token
+
+# iterates through file in chunks (=part variable)
+# it then splits that chunk by whitespace and iterates over that split list (every token) = O(N)
+def tokenize(text):
+    tokens_and_counts = {}
+
+    for line in text:
+        tokens = line.split()
+        for token in tokens:
+            token = remove_invalid_chars(token) 
+            if " " not in token: 
+                token_lower = token.lower()
+                if token_lower in STOP_WORDS:
+                    continue
+                if token_lower not in tokens_and_counts:
+                    tokens_and_counts[token_lower] = 1
+                else:
+                    tokens_and_counts[token_lower] += 1
+            else:
+                tokens += token.split()
+
+    return tokens_and_counts
+
 
 # files to store data for report
 UNIQUE_PAGES_FILE = 'unique_pages.txt'
@@ -58,28 +95,49 @@ def extract_next_links(url, resp):
 
     if resp.status != 200 or not resp.raw_response or not resp.raw_response.content:
         return []
+   
+    if resp.url in unique_pages:
+        return []
 
     try:
         # use beautifulsoup to parse page
         soup = BeautifulSoup(resp.raw_response.content, 'lxml')
-
+        unique_pages.add(resp.url)
 
         #TODO: extract subdomain and update the subdomain_pages
+        parsed_url = urlparse(resp.url)
+        subdomain = parsed_url.netloc.lower()  # lower to normalize
+        if subdomain not in subdomain_pages.keys():
+            subdomain_pages[subdomain] = set()
+        else:
+            subdomain_pages[subdomain].add(resp.url)
 
-        #TODO: exctract text
-        #test
+        #TODO: extract text
+        text = [text for text in soup.stripped_strings]
 
         #TODO: exclude stop words when counting words
+        tokens = tokenize(text)     
+        word_frequencies = Counter(tokens)
+        curr_word_count = sum(word_frequencies.values())
 
-        #TODO: pdate longest page if needed
+        #TODO: update longest page if needed
+        if curr_word_count > longest_page["word_count"]:
+            longest_page["url"] = resp.url
+            longest_page["word_count"] = curr_word_count
 
         #TODO: extract hyperlinks
+        links = []
+        for link in soup.find_all('a'):
+            links.append(link.get('href'))
 
         #TODO: call method to save to reports save_data()
+        # save_data()
+        return links
 
     except Exception as e:
         print(f"Error {url}: {e}")
         return []
+
 
 def is_valid(url):
     # Decide whether to crawl this url or not. 
@@ -150,3 +208,42 @@ def save_data():
         f.write("Subdomains and page counts:\n")
         for subdomain in sorted(subdomain_pages.keys()):
             f.write(f"{subdomain}, {len(subdomain_pages[subdomain])}\n")
+
+
+#################################
+# TEST
+
+
+class MockResponse:
+    def __init__(self, status, content, url):
+        self.status = status
+        self.raw_response = self.RawResponse(content, url)
+        self.url = url
+    
+    class RawResponse:
+        def __init__(self, content, url):
+            self.content = content
+            self.url = url
+
+# Create a mock response to simulate an HTTP request
+mock_html_content = """
+<html>
+    <body>
+        <a href="https://example.com/page1">Link 1</a>
+        <a href="/page2">Link 2</a>
+        <a href="https://example.com/page3">Link 3</a>
+        
+    </body>
+</html>
+"""
+mock_resp = MockResponse(status=200, content=mock_html_content.encode('utf-8'), url="https://example.com")
+
+
+def main ():
+    print("start")
+    print(extract_next_links(".ics.uci.edu", mock_resp))
+
+
+
+if __name__ == "__main__":
+    main()
