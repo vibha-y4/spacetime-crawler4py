@@ -214,7 +214,7 @@ def save_data():
 
 
 #################################
-# TEST
+# TEST # cursorai
 
 
 class MockResponse:
@@ -229,7 +229,8 @@ class MockResponse:
             self.url = url
 
 # Create a mock response to simulate an HTTP request
-mock_html_content = """
+'''
+mock_html_content = ///
 <html>
     <body>
         <a href="https://example.com/page1">Link 1</a>
@@ -238,7 +239,7 @@ mock_html_content = """
         
     </body>
 </html>
-"""
+///
 mock_resp = MockResponse(status=200, content=mock_html_content.encode('utf-8'), url="https://example.com")
 
 
@@ -250,3 +251,4 @@ def main ():
 
 if __name__ == "__main__":
     main()
+'''
