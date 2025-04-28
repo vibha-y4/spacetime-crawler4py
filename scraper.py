@@ -92,7 +92,7 @@ def extract_next_links(url, resp):
     #         resp.raw_response.url: the url, again
     #         resp.raw_response.content: the content of the page!
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
-
+    global unique_pages, word_frequencies, subdomain_pages, longest_page
     if resp.status != 200 or not resp.raw_response or not resp.raw_response.content:
         return []
    
@@ -117,7 +117,8 @@ def extract_next_links(url, resp):
 
         #TODO: exclude stop words when counting words
         tokens = tokenize(text)     
-        word_frequencies = Counter(tokens)
+        # would need to compute the number of word frequencies across ALL crawled pages
+        word_frequencies = word_frequencies + Counter(tokens)
         curr_word_count = sum(word_frequencies.values())
 
         #TODO: update longest page if needed
@@ -190,6 +191,8 @@ def is_valid(url):
 
 
 def save_data():
+    # manage global vars
+    global unique_pages, word_frequencies, subdomain_pages, longest_page
     with open(UNIQUE_PAGES_FILE, 'w') as f:
         f.write(f"Total unique pages: {len(unique_pages)}\n")
         for page in sorted(unique_pages):
