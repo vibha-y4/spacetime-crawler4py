@@ -132,7 +132,7 @@ def extract_next_links(url, resp):
             links.append(link.get('href'))
 
         #TODO: call method to save to reports save_data()
-        # save_data()
+        save_data()
         return links
 
     except Exception as e:
