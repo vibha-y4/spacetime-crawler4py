@@ -1,6 +1,7 @@
 import requests
 import cbor
 import time
+import pickle
 
 from utils.response import Response
 
