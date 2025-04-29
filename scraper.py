@@ -1,3 +1,4 @@
+from datetime import datetime
 import re
 from urllib.parse import urlparse
 import bs4
@@ -61,6 +62,7 @@ UNIQUE_PAGES_FILE = 'unique_pages.txt'
 WORD_COUNTS_FILE = 'word_counts.txt'
 COMMON_WORDS_FILE = 'common_words.txt'
 SUBDOMAINS_FILE = 'subdomains.txt'
+ERROR_FILE = 'crawler_errors.txt'
 
 # variables to collect data for report
 unique_pages = set()
@@ -93,6 +95,13 @@ def extract_next_links(url, resp):
     #         resp.raw_response.content: the content of the page!
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
     global unique_pages, word_frequencies, subdomain_pages, longest_page
+
+    if 600 <= resp.status <= 606:
+        error_msg = resp.error if resp.error else "No error message provided"
+        with open(ERROR_FILE, 'a') as f:
+            f.write(f"Error for {url}: Status {resp.status}, Error: {error_msg}\n")
+        return []
+
     if resp.status != 200 or not resp.raw_response or not resp.raw_response.content:
         return []
    
