@@ -1,5 +1,5 @@
 import re
-from urllib.parse import urlparse, urldefrag
+from urllib.parse import urlparse, urldefrag, urljoin
 from bs4 import BeautifulSoup
 from collections import Counter
 import sys
@@ -98,27 +98,36 @@ def extract_next_links(url, resp):
             subdomain_pages[subdomain] = set()
         subdomain_pages[subdomain].add(defragged_url)
 
-        #TODO: extract text
-        text = [text for text in soup.stripped_strings]
+        # extract text and count words
+        text = ' '.join(soup.stripped_strings)
+        if len(text) < 100:  # skip low-information pages
+            return []
+        tokens = tokenize(text)
+        page_word_count = sum(tokens.values())
+        word_frequencies.update(tokens)
 
-        #TODO: exclude stop words when counting words
-        tokens = tokenize(text)     
-        # would need to compute the number of word frequencies across ALL crawled pages
-        word_frequencies = word_frequencies + Counter(tokens)
-        curr_word_count = sum(word_frequencies.values())
+        # update longest page if needed
+        if page_word_count > longest_page['word_count']:
+            longest_page['url'] = defragged_url
+            longest_page['word_count'] = page_word_count
 
-        #TODO: update longest page if needed
-        if curr_word_count > longest_page["word_count"]:
-            longest_page["url"] = resp.url
-            longest_page["word_count"] = curr_word_count
-
-        #TODO: extract hyperlinks
+        # extract hyperlinks
         links = []
-        for link in soup.find_all('a'):
-            links.append(link.get('href'))
+        base_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
+        for link in soup.find_all('a', href=True):
+            href = link['href'].strip()
+            if not href:
+                continue
+            # resolve relative URLs
+            absolute_url = urljoin(base_url, href)
+            # defragment link
+            defragged_link, _ = urldefrag(absolute_url)
+            links.append(defragged_link)
 
-        #TODO: call method to save to reports save_data()
-        # save_data()
+        # call method to save to reports save_data()
+        # save data periodically every 100 pages
+        if len(unique_pages) % 100 == 0:
+            save_data()
         return links
 
     except Exception as e:
@@ -131,7 +140,6 @@ def is_valid(url):
     # If you decide to crawl it, return True; otherwise return False.
     # There are already some conditions that return False.
     try:
-        #TODO: Check for other criteria for infinite traps and pages with no info
         parsed = urlparse(url)
         domain = parsed.netloc.lower() # extracts the domain
         path = parsed.path.lower() # extracts the path
@@ -154,9 +162,7 @@ def is_valid(url):
         if re.search(r'(calendar|event|\d{4}-\d{2}-\d{2})', path):
             return False
 
-        #check for high quality pages (over 100 text)
-
-
+        # avoid downloads or attachments
         if 'download' in path or 'attachment' in path:
             return False
 
@@ -173,7 +179,6 @@ def is_valid(url):
 
         return True
 
-    #TODO: don't know if this needs to be fixed
     except TypeError:
         print("TypeError for ", parsed)
         raise
