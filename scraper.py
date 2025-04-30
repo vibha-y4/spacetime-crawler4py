@@ -1,5 +1,5 @@
 import re
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urldefrag
 from bs4 import BeautifulSoup
 from collections import Counter
 import sys
@@ -69,17 +69,18 @@ def extract_next_links(url, resp):
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
     global unique_pages, word_frequencies, subdomain_pages, longest_page
 
-    if 600 <= resp.status <= 606:
-        error_msg = resp.error if resp.error else "No error message provided"
-        with open(ERROR_FILE, 'a') as f:
-            f.write(f"Error for {url}: Status {resp.status}, Error: {error_msg}\n")
+    if resp.status != 200 or not resp.raw_response or not resp.raw_response.content:
+        if 600 <= resp.status <= 606:
+            error_msg = resp.error if resp.error else "No error message provided"
+            with open(ERROR_FILE, 'a') as f:
+                f.write(f"Error for {url}: Status {resp.status}, Error: {error_msg}\n")
         return []
 
-    if resp.status != 200 or not resp.raw_response or not resp.raw_response.content:
+    # defragment URL for uniqueness
+    defragged_url, _ = urldefrag(resp.url)
+    if defragged_url in unique_pages:
         return []
-   
-    if resp.url in unique_pages:
-        return []
+    unique_pages.add(defragged_url)
 
     try:
         # use beautifulsoup to parse page
