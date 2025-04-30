@@ -1,7 +1,5 @@
-from datetime import datetime
 import re
 from urllib.parse import urlparse
-import bs4
 from bs4 import BeautifulSoup
 from collections import Counter
 import sys
@@ -22,39 +20,14 @@ def load_stopwords(file_path='stopwords.txt'):
 STOP_WORDS = load_stopwords()
 
 
-# goes through every char of the token
-# replaces non alphanumeric characters with whitespace
-def remove_invalid_chars(token):
-    valid_chars = [str(x) for x in range(0, 10)] + [x for x in range(97, 123)] + [x for x in range(65, 91)]
-    fixed_token = ""
-    for char in token:
-        if ord(char) in valid_chars:
-            fixed_token += char
-        else:
-            fixed_token += " "
-    return fixed_token
-
-# iterates through file in chunks (=part variable)
-# it then splits that chunk by whitespace and iterates over that split list (every token) = O(N)
 def tokenize(text):
-    tokens_and_counts = {}
-
-    for line in text:
-        tokens = line.split()
-        for token in tokens:
-            token = remove_invalid_chars(token) 
-            if " " not in token: 
-                token_lower = token.lower()
-                if token_lower in STOP_WORDS:
-                    continue
-                if token_lower not in tokens_and_counts:
-                    tokens_and_counts[token_lower] = 1
-                else:
-                    tokens_and_counts[token_lower] += 1
-            else:
-                tokens += token.split()
-
-    return tokens_and_counts
+    tokens = Counter()
+    # Convert to lowercase and split by non-alphanumeric characters
+    words = re.findall(r'\b[a-z0-9]+\b', text.lower())
+    for word in words:
+        if word not in STOP_WORDS and len(word) > 1:  # Ignore single characters
+            tokens[word] += 1
+    return tokens
 
 
 # files to store data for report
@@ -176,6 +149,9 @@ def is_valid(url):
         # avoids traps posed by calendars
         if re.search(r'(calendar|event|\d{4}-\d{2}-\d{2})', path):
             return False
+
+        #check for high quality pages (over 100 text)
+
 
         if 'download' in path or 'attachment' in path:
             return False
