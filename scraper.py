@@ -85,15 +85,18 @@ def extract_next_links(url, resp):
     try:
         # use beautifulsoup to parse page
         soup = BeautifulSoup(resp.raw_response.content, 'lxml')
-        unique_pages.add(resp.url)
 
-        #TODO: extract subdomain and update the subdomain_pages
-        parsed_url = urlparse(resp.url)
-        subdomain = parsed_url.netloc.lower()  # lower to normalize
-        if subdomain not in subdomain_pages.keys():
+        # extract subdomain
+        parsed_url = urlparse(defragged_url)
+        domain = parsed_url.netloc.lower()  # lower to normalize
+        subdomain = domain
+        for allowed_domain in ALLOWED_DOMAINS:
+            if domain == allowed_domain or domain.endswith(f'.{allowed_domain}'):
+                subdomain = domain
+                break
+        if subdomain not in subdomain_pages:
             subdomain_pages[subdomain] = set()
-        else:
-            subdomain_pages[subdomain].add(resp.url)
+        subdomain_pages[subdomain].add(defragged_url)
 
         #TODO: extract text
         text = [text for text in soup.stripped_strings]
