@@ -90,10 +90,7 @@ def extract_next_links(url, resp):
         parsed_url = urlparse(defragged_url)
         domain = parsed_url.netloc.lower()  # lower to normalize
         subdomain = domain
-        for allowed_domain in ALLOWED_DOMAINS:
-            if domain == allowed_domain or domain.endswith(f'.{allowed_domain}'):
-                subdomain = domain
-                break
+        # removed repetition here
         if subdomain not in subdomain_pages:
             subdomain_pages[subdomain] = set()
         subdomain_pages[subdomain].add(defragged_url)
@@ -208,7 +205,7 @@ def save_data():
 
 
 #################################
-# TEST # cursorai
+# TEST 
 
 
 class MockResponse:
